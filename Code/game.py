@@ -21,7 +21,8 @@ class Game:
 
         # Timer
         self.timers = {
-            'vertical move': Timer(UPDATE_START_SPEED, True, self.move_down) #Timer(duration, repeated, func)
+            'vertical move': Timer(UPDATE_START_SPEED, True, self.move_down), #Timer(duration, repeated, func)
+            'horizontal move': Timer(MOVE_WAIT_TIME)
         }
         self.timers['vertical move'].activate()
 
@@ -29,6 +30,7 @@ class Game:
         # Update
         self.timer_update()
         self.sprites.update()
+        self.input()
         # Drawing sprites
         self.surface.fill(GRAY)
         self.sprites.draw(self.surface)
@@ -41,7 +43,6 @@ class Game:
         """
         # pg.draw.rect(surface, color, rect, width, corner radius)
         pg.draw.rect(self.display_surface, LINE_COLOUR, self.rect, 2, 2)
-
 
     def draw_grid(self):
         for col in range(1, COLUMNS):
@@ -59,6 +60,16 @@ class Game:
     def timer_update(self):
         for timer in self.timers.values():
             timer.update()
+
+    def input(self):
+        keys = pg.key.get_pressed()
+        if not self.timers['horizontal move'].active:
+            if keys [pg.K_LEFT]:
+                self.tetromino.move_horizontal(-1)
+                self.timers['horizontal move'].activate()
+            if keys [pg.K_RIGHT]:
+                self.tetromino.move_horizontal(1)
+                self.timers['horizontal move'].activate()
 
 class Block (pg.sprite.Sprite):
     def __init__(self, group, pos, colour):
@@ -89,6 +100,11 @@ class Tetromino:
 
         # Create blocks comprehension (1 shape per class)
         self.blocks = [Block(group, pos, self.colour) for pos in self.block_positions]
+
+    def move_horizontal(self, amount):
+        for block in self.blocks:
+            block.pos.x += amount
+
 
     def move_down(self):
         for block in self.blocks:
