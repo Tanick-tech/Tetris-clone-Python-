@@ -82,6 +82,12 @@ class Block (pg.sprite.Sprite):
         self.pos = pg.Vector2(pos) + BLOCK_OFFSET
         self.rect = self.image.get_rect(topleft = self.pos * CELL_SIZE)
 
+    def horizontal_collide(self, x):
+        if not 0 <= x < COLUMNS:
+            return True
+    def vertical_collide (self, y):
+        if y >= ROWS:
+            return True
     def update(self):
         # self.pos -> rect (because the rect is fixed, so we change the position of it)
         # self.pos changes because of move_down self in Tetromino class
@@ -102,10 +108,20 @@ class Tetromino:
         self.blocks = [Block(group, pos, self.colour) for pos in self.block_positions]
 
     def move_horizontal(self, amount):
-        for block in self.blocks:
-            block.pos.x += amount
-
+        if not self.next_move_horizontal_collide(self.blocks, amount):
+            for block in self.blocks:
+                block.pos.x += amount
 
     def move_down(self):
-        for block in self.blocks:
-            block.pos.y += 1
+        if not self.next_move_vertical_collide(self.blocks, 1):
+            for block in self.blocks:
+                block.pos.y += 1
+
+    # Collision
+    def next_move_horizontal_collide(self, blocks, amount):
+        collision_list = [block.horizontal_collide(int(block.pos.x + amount)) for block in self.blocks]
+        return True if any(collision_list) else False
+    # Movement
+    def next_move_vertical_collide(self, blocks, amount):
+        collision_list = [block.vertical_collide(int(block.pos.y + amount)) for block in self.blocks]
+        return True if any(collision_list) else False
