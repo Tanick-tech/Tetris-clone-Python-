@@ -1,10 +1,10 @@
 from settings import *
 from sys import exit
+
 # Components
 from game import Game
 from score import Score
 from preview import Preview
-
 
 class Main:
     # Declaring attribute of a class.
@@ -45,6 +45,7 @@ class Main:
             # Updating the game - decorations
             pg.display.update()
             self.clock.tick()
+
 if __name__ == '__main__':
     main = Main()
     main.run()

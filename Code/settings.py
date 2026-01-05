@@ -30,3 +30,20 @@ CYAN = '#6CC6D9'
 ORANGE = '#F07E13'
 GRAY = '#1C1C1C'
 LINE_COLOUR = '#FFFFFF'
+
+# Shapes
+TETROMINOS = {
+    'T': {'shape': [(0,0), (-1,0), (1,0), (0,-1)], 'colour': PURPLE},
+    'O': {'shape': [(0,0), (0,-1), (1,0), (1,-1)], 'colour': YELLOW},
+    'J': {'shape': [(0,0), (0,-1), (1,0), (1,-1)], 'colour': BLUE},
+    'L': {'shape': [(0,0), (0,-1), (0,1), (1,1)], 'colour': ORANGE},
+    'I': {'shape': [(0,0), (0,-1), (0,-2), (0,1)], 'colour': CYAN},
+    'S': {'shape': [(0,0), (-1,0), (0,-1), (1,-1)], 'colour': GREEN},
+    'Z': {'shape': [(0,0), (1,0), (0,-1), (-1,-1)], 'colour': RED},
+}
+
+# Game behaviour
+UPDATE_START_SPEED = 800
+MOVE_WAIT_TIME = 200
+ROTATE_WAIT_TIME = 200
+BLOCK_OFFSET = pg.Vector2(COLUMNS // 2, 5)
