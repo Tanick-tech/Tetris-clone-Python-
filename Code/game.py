@@ -1,6 +1,6 @@
 from settings import *
 from random import choice
-
+from timer import Timer
 class Game:
     def __init__(self):
         # General - creating layer on top of the background
@@ -19,12 +19,21 @@ class Game:
         # Tetromino
         self.tetromino = Tetromino(choice(list(TETROMINOS.keys())), self.sprites)
 
+        # Timer
+        self.timers = {
+            'vertical move': Timer(UPDATE_START_SPEED, True, self.move_down) #Timer(duration, repeated, func)
+        }
+        self.timers['vertical move'].activate()
+
     def run(self):
+        # Update
+        self.timer_update()
+        self.sprites.update()
+        # Drawing sprites
         self.surface.fill(GRAY)
         self.sprites.draw(self.surface)
-        # drawing
+        # Drawing grid
         self.draw_grid()
-
         self.display_surface.blit (self.surface, (PADDING, PADDING))
         """
         blit: block image transfer - fancy way of saying 1 surface on 1 surface
@@ -44,9 +53,15 @@ class Game:
             pg.draw.line(self.line_surface, LINE_COLOUR, (0, y), (self.surface.get_width(), y), 1)
         self.surface.blit(self.line_surface, (0, 0))
 
+    def move_down(self):
+        self.tetromino.move_down()
+
+    def timer_update(self):
+        for timer in self.timers.values():
+            timer.update()
+
 class Block (pg.sprite.Sprite):
     def __init__(self, group, pos, colour):
-
         # General
         super().__init__(group) # Call out the bigger class's (super class) attributes so we can use it later
         self.image = pg.Surface((CELL_SIZE, CELL_SIZE))
@@ -54,9 +69,13 @@ class Block (pg.sprite.Sprite):
 
         # Position
         self.pos = pg.Vector2(pos) + BLOCK_OFFSET
-        x = self.pos.x * CELL_SIZE
-        y = self.pos.y * CELL_SIZE
-        self.rect = self.image.get_rect(topleft = (x, y))
+        self.rect = self.image.get_rect(topleft = self.pos * CELL_SIZE)
+
+    def update(self):
+        # self.pos -> rect (because the rect is fixed, so we change the position of it)
+        # self.pos changes because of move_down self in Tetromino class
+        self.rect.topleft = self.pos * CELL_SIZE
+
 
 class Tetromino:
     def __init__(self, shape, group):
@@ -70,3 +89,7 @@ class Tetromino:
 
         # Create blocks comprehension (1 shape per class)
         self.blocks = [Block(group, pos, self.colour) for pos in self.block_positions]
+
+    def move_down(self):
+        for block in self.blocks:
+            block.pos.y += 1
