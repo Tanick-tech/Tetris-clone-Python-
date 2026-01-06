@@ -44,7 +44,7 @@ TETROMINOS = {
 # Every shape starts with (0; 0) is always the pivot point to rotate.
 
 # Game behaviour
-UPDATE_START_SPEED = 200 # Increase the game difficulty
+UPDATE_START_SPEED = 300 # Increase the game difficulty
 MOVE_WAIT_TIME = 200
 ROTATE_WAIT_TIME = 200
 BLOCK_OFFSET = pg.Vector2(COLUMNS // 2, -1)

@@ -21,7 +21,7 @@ class Score:
         self.lines = 0
 
     def display_text(self, pos, text):
-        text_surface = self.font.render(f'{text[0]}: {text[1]}', True, 'white')
+        text_surface = self.font.render(f'{text[0]}: {text[1]}', True, 'white') #render (text, enter alias text, color)
         text_rext = text_surface.get_rect(center=pos)
         self.surface.blit(text_surface, text_rext)
     def run(self):
