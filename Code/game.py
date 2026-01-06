@@ -17,7 +17,12 @@ class Game:
         self.line_surface.set_alpha(120) # Transparency: 0 --> 255 (no transparency)
 
         # Tetromino
-        self.tetromino = Tetromino(choice(list(TETROMINOS.keys())), self.sprites)
+        self.field_data = [[0 for x in range(COLUMNS)] for y in range(ROWS)]
+        self.tetromino = Tetromino(
+            choice(list(TETROMINOS.keys())),
+            self.sprites,
+            self.create_new_tetromino,
+            self.field_data)
 
         # Timer
         self.timers = {
@@ -71,6 +76,13 @@ class Game:
                 self.tetromino.move_horizontal(1)
                 self.timers['horizontal move'].activate()
 
+    def create_new_tetromino(self):
+        self.tetromino = Tetromino(
+            choice(list(TETROMINOS.keys())),
+            self.sprites,
+            self.create_new_tetromino,
+            self.field_data)
+
 class Block (pg.sprite.Sprite):
     def __init__(self, group, pos, colour):
         # General
@@ -82,11 +94,15 @@ class Block (pg.sprite.Sprite):
         self.pos = pg.Vector2(pos) + BLOCK_OFFSET
         self.rect = self.image.get_rect(topleft = self.pos * CELL_SIZE)
 
-    def horizontal_collide(self, x):
+    def horizontal_collide(self, x, field_data):
         if not 0 <= x < COLUMNS:
             return True
-    def vertical_collide (self, y):
+        if field_data[int(self.pos.y)][x]:
+            return True
+    def vertical_collide (self, y, field_data):
         if y >= ROWS:
+            return True
+        if y>= 0 and field_data[y][int(self.pos.x)]:
             return True
     def update(self):
         # self.pos -> rect (because the rect is fixed, so we change the position of it)
@@ -95,7 +111,7 @@ class Block (pg.sprite.Sprite):
 
 
 class Tetromino:
-    def __init__(self, shape, group):
+    def __init__(self, shape, group, create_new_tetromino, field_data):
         # Setup
         self.block_positions = TETROMINOS[shape]['shape']
         ''' 
@@ -106,6 +122,8 @@ class Tetromino:
 
         # Create blocks comprehension (1 shape per class)
         self.blocks = [Block(group, pos, self.colour) for pos in self.block_positions]
+        self.create_new_tetromino = create_new_tetromino
+        self.field_data = field_data
 
     def move_horizontal(self, amount):
         if not self.next_move_horizontal_collide(self.blocks, amount):
@@ -116,12 +134,22 @@ class Tetromino:
         if not self.next_move_vertical_collide(self.blocks, 1):
             for block in self.blocks:
                 block.pos.y += 1
+        else:
+            for block in self.blocks:
+                self.field_data[int(block.pos.y)][int(block.pos.x)] = block
+                '''
+                The idea of this line is to change the number cells occupied by these blocks into 1
+                Else: it is 0 --> the blocks can go there
+                This is to prevent any blocks colliding, overlapping each other
+                int in there is for indexing (since vector doesn't have a integer value so this is important
+                '''
+            self.create_new_tetromino()
 
     # Collision
     def next_move_horizontal_collide(self, blocks, amount):
-        collision_list = [block.horizontal_collide(int(block.pos.x + amount)) for block in self.blocks]
+        collision_list = [block.horizontal_collide(int(block.pos.x + amount), self.field_data) for block in self.blocks]
         return True if any(collision_list) else False
     # Movement
     def next_move_vertical_collide(self, blocks, amount):
-        collision_list = [block.vertical_collide(int(block.pos.y + amount)) for block in self.blocks]
+        collision_list = [block.vertical_collide(int(block.pos.y + amount), self.field_data) for block in self.blocks]
         return True if any(collision_list) else False
