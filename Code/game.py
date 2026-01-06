@@ -2,13 +2,15 @@ from settings import *
 from random import choice
 from timer import Timer
 class Game:
-    def __init__(self):
+    def __init__(self, get_next_shape):
         # General - creating layer on top of the background
         self.surface = pg.Surface ((GAME_WIDTH, GAME_HEIGHT))
         self.display_surface = pg.display.get_surface()
         self.rect = self.surface.get_rect(topleft =(PADDING, PADDING))
         self.sprites = pg.sprite.Group()
 
+        # Game connection
+        self.get_next_shape = get_next_shape
 
         # Line surface:
         self.line_surface = self.surface.copy()
@@ -86,7 +88,7 @@ class Game:
     def create_new_tetromino(self):
         self.check_finished_rows()
         self.tetromino = Tetromino(
-            choice(list(TETROMINOS.keys())),
+            self.get_next_shape(),
             self.sprites,
             self.create_new_tetromino,
             self.field_data)
