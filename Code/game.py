@@ -27,7 +27,8 @@ class Game:
         # Timer
         self.timers = {
             'vertical move': Timer(UPDATE_START_SPEED, True, self.move_down), #Timer(duration, repeated, func)
-            'horizontal move': Timer(MOVE_WAIT_TIME)
+            'horizontal move': Timer(MOVE_WAIT_TIME),
+            'rotate': Timer(ROTATE_WAIT_TIME)
         }
         self.timers['vertical move'].activate()
 
@@ -68,6 +69,7 @@ class Game:
 
     def input(self):
         keys = pg.key.get_pressed()
+        # Checking horizontal movement
         if not self.timers['horizontal move'].active:
             if keys [pg.K_LEFT]:
                 self.tetromino.move_horizontal(-1)
@@ -75,6 +77,11 @@ class Game:
             if keys [pg.K_RIGHT]:
                 self.tetromino.move_horizontal(1)
                 self.timers['horizontal move'].activate()
+        # Check for rotation
+        if not self.timers['rotate'].active:
+            if keys[pg.K_UP]:
+                self.tetromino.rotate()
+                self.timers['rotate'].activate()
 
     def create_new_tetromino(self):
         self.check_finished_rows()
@@ -84,15 +91,22 @@ class Game:
             self.create_new_tetromino,
             self.field_data)
 
-    def check_finished_rows(self):
+    def check_finished_rows(self): # This def is to eliminate the "full" rows
         delete_rows = []
-        for i, row in enumerate(self.field_data):
+        for i, row in enumerate(self.field_data): # Enumerate means indexing the rows
             if all(row):
                 delete_rows.append(i)
         if delete_rows:
             for delete_row in delete_rows:
                 for block in self.field_data[delete_row]:
-                    block.kill()
+                    block.kill() # A code in the pygame library to delete
+                    '''
+                    The problem here is that the game is working on 2 different platforms.
+                    1st: The visible platform (where we can actually see the blocks moving). 
+                    2nd: The invisible platform (I call it "the matrix" where 0 (no blocks) and 1 (have blocks) marked in each cell
+                    Although there is the kill code, it only happens on the visible platform. 
+                    The next 2 codes is to erase the row in the matrix and also shift the whole thing down when the row disappears 
+                    '''
                 for row in self.field_data:
                     for block in row:
                         if block and block.pos.y < delete_row:
@@ -126,11 +140,18 @@ class Block (pg.sprite.Sprite):
         # self.pos -> rect (because the rect is fixed, so we change the position of it)
         # self.pos changes because of move_down self in Tetromino class
         self.rect.topleft = self.pos * CELL_SIZE
+    def rotate(self, pivot_pos):
+        # distance = self.pos - pivot_pos
+        # rotated = distance.rotate(90) - Rotated the distance above (jus the length, not the shape yet)
+        # new_pos = pivot_pos + rotated
+        return pivot_pos + (self.pos - pivot_pos).rotate(90)
+
 
 
 class Tetromino:
     def __init__(self, shape, group, create_new_tetromino, field_data):
         # Setup
+        self.shape = shape
         self.block_positions = TETROMINOS[shape]['shape']
         ''' 
         The 1st shape is to define the type of shape
@@ -171,3 +192,26 @@ class Tetromino:
     def next_move_vertical_collide(self, blocks, amount):
         collision_list = [block.vertical_collide(int(block.pos.y + amount), self.field_data) for block in self.blocks]
         return True if any(collision_list) else False
+    # Rotation
+    def rotate(self):
+        if self.shape != 'O':
+            # Need a pivot point:
+            pivot_pos = self.blocks[0].pos
+            # New block positions
+            new_block_positions = [block.rotate(pivot_pos) for block in self.blocks]
+            # Collision check - sometimes we rotate and the block goes out of the limit
+            for pos in new_block_positions:
+                #horizontal check
+                if pos.x < 0 or pos.x >= COLUMNS:
+                    return
+                #field check -> collision with other pieces
+                if self.field_data[int(pos.y)][int(pos.x)]:
+                    return
+                #floor check
+                if pos.y > ROWS:
+                    return
+            # Implement new positions (means after rotation)
+            for i, block in enumerate(self.blocks):
+                block.pos = new_block_positions[i]
+
+
